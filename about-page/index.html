@@ -39,14 +39,17 @@
   </head>
     
   <body>
-  <p id="crawl">
+
+  <div class="crawl-wrapper">
+    <p id="crawl">
 <span>Episode I</span>
 <span>THE CODE AWAKENS</span>
 Dorjan is a physics student with a strong passion for space, coding, and computers.
 Driven by curiosity and a love for understanding how things work, he explores both the laws of the universe and the systems that power modern technology.<br><br>
 Alongside his studies in physics, he builds apps, experiments with code, and constantly expands his knowledge of computers and digital creation. For him, programming is more than a skill — it is a way to turn ideas into reality.<br><br>
 Inspired by science, technology, and the endless sense of possibility found in space, he is building his path one project at a time. This portfolio is part of that journey.
-</p>
+    </p>
+  </div>
 
   <audio id="theme" src="../music/Star Wars Intro HD 1080p (1).mp3" preload="auto"></audio>
 
@@ -60,6 +63,7 @@ Inspired by science, technology, and the endless sense of possibility found in s
     var muteBtn = document.getElementById('mute-btn');
     var crawl = document.getElementById('crawl');
 
+    audio.volume = 0.6;
     audio.play().catch(function() {});
 
     muteBtn.addEventListener('click', function() {
@@ -72,7 +76,7 @@ Inspired by science, technology, and the endless sense of possibility found in s
         if (window.parent !== window) {
           window.parent.postMessage('crawl-finished', '*');
         }
-      }, 7000);
+      }, 3000);
     });
   </script>
   </body>

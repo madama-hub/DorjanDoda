@@ -1,5 +1,16 @@
 body {
   background: #111;
+  overflow: hidden;
+  margin: 0;
+  height: 100vh;
+}
+
+.crawl-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   perspective: 200px;
   overflow: hidden;
 }
@@ -13,7 +24,7 @@ p {
   max-width: 90vw;
   margin: 0 auto;
   transform: rotateX(30deg);
-  animation: animateCrawl 35s linear forwards;
+  animation: animateCrawl 40s linear forwards;
 }
 
 p span { 
@@ -25,7 +36,7 @@ p span {
 
 @keyframes animateCrawl {
     0%   { transform: rotateX(30deg) translateY(500px); }
-    100% { transform: rotateX(30deg) translateY(-800px); }
+    100% { transform: rotateX(30deg) translateY(-1200px); }
 }
 
 @media (max-width: 768px) {
@@ -36,7 +47,7 @@ p span {
 
   @keyframes animateCrawl {
     0%   { transform: rotateX(30deg) translateY(400px); }
-    100% { transform: rotateX(30deg) translateY(-600px); }
+    100% { transform: rotateX(30deg) translateY(-900px); }
   }
 }
 
