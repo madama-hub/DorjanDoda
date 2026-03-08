@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dorjan Doda — Portfolio</title>
+    <meta name="description" content="Interactive 3D portfolio by Dorjan Doda">
+
+    <style>
+        /* ── Font Faces ── */
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: url('./sf-pro-display/SFPRODISPLAYREGULAR.OTF') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: url('./sf-pro-display/SFPRODISPLAYMEDIUM.OTF') format('opentype');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: url('./sf-pro-display/SFPRODISPLAYBOLD.OTF') format('opentype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        /* ── Typography Scale ── */
+        :root {
+            --font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-size-title: 3rem;
+            --font-size-subtitle: 1.1rem;
+            --font-size-body: 0.95rem;
+            --font-size-caption: 0.75rem;
+            --color-text: #ffffff;
+        }
+
+        *,
+        *::after,
+        *::before {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            overflow: hidden;
+            background-color: #000000;
+            font-family: var(--font-family);
+            color: var(--color-text);
+            cursor: grab;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body:active {
+            cursor: grabbing;
+        }
+
+        /* ── Canvas ── */
+        .webgl {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* ── Site Name ── */
+        .site-name {
+            position: fixed;
+            top: 1.6rem;
+            left: 1.8rem;
+            z-index: 45;
+            font-size: var(--font-size-title);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-text);
+            user-select: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .site-name.clickable {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .site-name.clickable:hover {
+            opacity: 0.6;
+        }
+
+        .site-name:not(.clickable) {
+            pointer-events: none;
+        }
+
+        /* ── Navigation ── */
+        .nav-links {
+            position: fixed;
+            top: 1.8rem;
+            right: 2rem;
+            z-index: 2;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            font-family: var(--font-family);
+            font-size: var(--font-size-subtitle);
+            font-weight: 500;
+            color: var(--color-text);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            user-select: none;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.5;
+        }
+
+        .nav-links.hidden {
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* ── Loading Screen ── */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000000;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        #loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .spinner-circle {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(140, 130, 115, 0.25);
+            border-top-color: rgb(140, 130, 115);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Mac zoom-through overlay ── */
+        #mac-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #mac-transition.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ── Projects iframe ── */
+        #projects-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 40;
+            border: none;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #projects-frame.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ── About iframe ── */
+        #about-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 40;
+            border: none;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #about-frame.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <canvas class="webgl"></canvas>
+    <div class="site-name" id="siteName">DORJAN DODA</div>
+
+    <!-- Navigation -->
+    <div class="nav-links" id="navLinks">
+        <a id="navLeft" data-scene="projects">PROJECTS</a>
+        <a id="navRight" data-scene="about">ABOUT</a>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loader">
+        <div class="spinner-circle"></div>
+    </div>
+
+    <!-- Mac zoom-through overlay -->
+    <div id="mac-transition"></div>
+
+    <!-- Projects iframe (hidden until needed) -->
+    <iframe id="projects-frame" src="about:blank"></iframe>
+
+    <!-- About iframe (hidden until needed) -->
+    <iframe id="about-frame" src="about:blank"></iframe>
+
+    <!-- Three.js & Extensions (CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r124/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // ══════════════════════════════════════
+        // CONFIGURATION
+        // ══════════════════════════════════════
+
+        // Circle radius — how far apart the scenes are placed
+        const SCENE_RADIUS = 25;
+
+        // Three scenes at 120° intervals around a circle
+        // Angles: Home = 90° (front), About = 330° (right), Projects = 210° (left)
+        const SCENES = {
+            home: {
+                angle: Math.PI / 2,
+                label: 'DORJAN DODA',
+                minDist: 4,
+                maxDist: 40,
+                minPolar: Math.PI / 5,
+                maxPolar: Math.PI / 2
+            },
+            about: {
+                angle: Math.PI / 2 - (2 * Math.PI / 3),
+                label: 'ABOUT',
+                minDist: 8,
+                maxDist: 45,
+                minPolar: Math.PI / 6,
+                maxPolar: Math.PI / 2.2
+            },
+            projects: {
+                angle: Math.PI / 2 + (2 * Math.PI / 3),
+                label: 'PROJECTS',
+                minDist: 8,
+                maxDist: 45,
+                minPolar: Math.PI / 6,
+                maxPolar: Math.PI / 2.2
+            }
+        };
+
+        // Compute world positions for each scene
+        for (const key of Object.keys(SCENES)) {
+            const a = SCENES[key].angle;
+            SCENES[key].x = Math.cos(a) * SCENE_RADIUS;
+            SCENES[key].z = Math.sin(a) * SCENE_RADIUS;
+        }
+
+        // Camera distance from each scene's center
+        const CAM_DIST = 17;
+        const CAM_HEIGHT = 4;
+
+        // ══════════════════════════════════════
+        // SETUP
+        // ══════════════════════════════════════
+
+        const loading = document.querySelector('#loader');
+        const siteName = document.querySelector('#siteName');
+        const navLinks = document.querySelector('#navLinks');
+        const navLeft = document.querySelector('#navLeft');
+        const navRight = document.querySelector('#navRight');
+
+        const canvas = document.querySelector('.webgl');
+        const scene = new THREE.Scene();
+        const textureLoader = new THREE.TextureLoader();
+        const gltfLoader = new THREE.GLTFLoader();
+
+        const sizes = { width: window.innerWidth, height: window.innerHeight };
+
+        // ── Camera ──
+        const camera = new THREE.PerspectiveCamera(10, sizes.width / sizes.height, 0.1, 200);
+        scene.add(camera);
+
+        // ── Lighting ──
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        // ── Controls ──
+        const controls = new THREE.OrbitControls(camera, canvas);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.minDistance = 10;
+        controls.maxDistance = 50;
+        controls.minPolarAngle = Math.PI / 5;
+        controls.maxPolarAngle = Math.PI / 2;
+
+        // ── Renderer ──
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+            alpha: true
+        });
+        renderer.setSize(sizes.width, sizes.height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputEncoding = THREE.sRGBEncoding;
+
+        // ══════════════════════════════════════
+        // SCENE STATE
+        // ══════════════════════════════════════
+
+        let currentScene = 'home';
+        let isTransitioning = false;
+        const loadedModels = {};
+        let macModelRef = null;
+        let crtTexture = null;
+        let crtCanvas = null;
+        let crtCtx = null;
+        let crtFrame = 0;
+
+        const macTransition = document.querySelector('#mac-transition');
+        const projectsFrame = document.querySelector('#projects-frame');
+        const aboutFrame = document.querySelector('#about-frame');
+        let projectsFrameLoaded = false;
+        let aboutFrameLoaded = false;
+
+        projectsFrame.addEventListener('load', () => {
+            if (projectsFrameLoaded) projectsFrame.dataset.ready = '1';
+        });
+        aboutFrame.addEventListener('load', () => {
+            if (aboutFrameLoaded) aboutFrame.dataset.ready = '1';
+        });
+
+        // ── Raycaster for TV click ──
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // ══════════════════════════════════════
+        // HELPER: Position camera for a scene
+        // ══════════════════════════════════════
+
+        function getCameraPos(sceneKey) {
+            const s = SCENES[sceneKey];
+            // Camera looks inward (from outside the circle toward the model)
+            const a = s.angle;
+            return {
+                camX: s.x + Math.cos(a) * CAM_DIST,
+                camY: CAM_HEIGHT,
+                camZ: s.z + Math.sin(a) * CAM_DIST,
+                targetX: s.x,
+                targetY: 0.5,
+                targetZ: s.z
+            };
+        }
+
+        function setCameraToScene(sceneKey) {
+            const p = getCameraPos(sceneKey);
+            const s = SCENES[sceneKey];
+            camera.position.set(p.camX, p.camY, p.camZ);
+            controls.target.set(p.targetX, p.targetY, p.targetZ);
+            controls.minDistance = s.minDist;
+            controls.maxDistance = s.maxDist;
+            controls.minPolarAngle = s.minPolar;
+            controls.maxPolarAngle = s.maxPolar;
+            controls.update();
+        }
+
+        // ══════════════════════════════════════
+        // NAVIGATION UI UPDATE
+        // ══════════════════════════════════════
+
+        function updateNav(sceneKey) {
+            currentScene = sceneKey;
+            if (sceneKey === 'home') {
+                siteName.classList.remove('clickable');
+            } else {
+                siteName.classList.add('clickable');
+            }
+        }
+
+        // ══════════════════════════════════════
+        // CAMERA ARC TRANSITION
+        // ══════════════════════════════════════
+
+        function transitionTo(targetSceneKey) {
+            if (isTransitioning || targetSceneKey === currentScene) return;
+            isTransitioning = true;
+            navLinks.classList.add('hidden');
+
+            const fromPos = getCameraPos(currentScene);
+            const toPos = getCameraPos(targetSceneKey);
+
+            const duration = 1500; // ms
+            const startTime = performance.now();
+
+            // Store start values
+            const startCam = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z);
+            const endCam = new THREE.Vector3(toPos.camX, toPos.camY, toPos.camZ);
+            const startTarget = new THREE.Vector3(controls.target.x, controls.target.y, controls.target.z);
+            const endTarget = new THREE.Vector3(toPos.targetX, toPos.targetY, toPos.targetZ);
+
+            controls.enabled = false;
+
+            function easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            function animateTransition() {
+                const elapsed = performance.now() - startTime;
+                const rawT = Math.min(elapsed / duration, 1);
+                const t = easeInOutCubic(rawT);
+
+                // Interpolate camera along an arc (raise Y in the middle for a nice swoop)
+                camera.position.lerpVectors(startCam, endCam, t);
+                camera.position.y += Math.sin(t * Math.PI) * 3; // arc lift
+
+                controls.target.lerpVectors(startTarget, endTarget, t);
+
+                if (rawT < 1) {
+                    requestAnimationFrame(animateTransition);
+                } else {
+                    // Snap to final position
+                    setCameraToScene(targetSceneKey);
+                    controls.enabled = true;
+                    isTransitioning = false;
+                    updateNav(targetSceneKey);
+                    navLinks.classList.remove('hidden');
+                }
+            }
+
+            animateTransition();
+        }
+
+        // ══════════════════════════════════════
+        // MAC SCREEN ZOOM → PROJECTS
+        // ══════════════════════════════════════
+
+        function showProjectsIframe() {
+            // Start loading the iframe if not already loaded
+            if (!projectsFrameLoaded) {
+                projectsFrame.src = './projects-page/index.html';
+                projectsFrameLoaded = true;
+            }
+
+            function revealIframe() {
+                projectsFrame.classList.add('active');
+                currentScene = 'projects';
+                siteName.classList.add('clickable');
+
+                setTimeout(() => {
+                    macTransition.classList.remove('active');
+                    macTransition.style.opacity = '';
+                    isTransitioning = false;
+                    navLinks.classList.add('hidden');
+                }, 500);
+            }
+
+            // If iframe already loaded once, reveal immediately; otherwise wait for load
+            if (projectsFrame.dataset.ready) {
+                revealIframe();
+            } else {
+                projectsFrame.addEventListener('load', () => {
+                    projectsFrame.dataset.ready = '1';
+                    revealIframe();
+                }, { once: true });
+            }
+        }
+
+        function hideProjectsIframe() {
+            projectsFrame.classList.remove('active');
+            canvas.style.display = '';
+        }
+
+        function zoomToMacAndLoadProjects() {
+            if (isTransitioning || currentScene === 'projects') return;
+            if (!macModelRef) {
+                // Mac not loaded yet — just show iframe directly
+                isTransitioning = true;
+                navLinks.classList.add('hidden');
+                macTransition.classList.add('active');
+                macTransition.style.opacity = '1';
+                showProjectsIframe();
+                return;
+            }
+
+            isTransitioning = true;
+            navLinks.classList.add('hidden');
+            controls.enabled = false;
+
+            // Get the Mac screen's world position
+            const macWorldPos = new THREE.Vector3();
+            macModelRef.getWorldPosition(macWorldPos);
+
+            // Screen center is in the upper portion of the Mac
+            const screenCenter = macWorldPos.clone();
+            screenCenter.y += 0.12;
+
+            // End camera: very close to the screen, approaching from current direction
+            const dirToCam = camera.position.clone().sub(screenCenter).normalize();
+            const endCamPos = screenCenter.clone().add(dirToCam.multiplyScalar(0.08));
+            endCamPos.y = screenCenter.y;
+
+            const duration = 1800;
+            const startTime = performance.now();
+            const startCam = camera.position.clone();
+            const startTarget = controls.target.clone();
+
+            // Start preloading the iframe during the zoom
+            if (!projectsFrameLoaded) {
+                projectsFrame.src = './projects-page/index.html';
+                projectsFrameLoaded = true;
+            }
+
+            function easeInQuart(t) {
+                return t * t * t * t;
+            }
+
+            function animateZoom() {
+                const elapsed = performance.now() - startTime;
+                const rawT = Math.min(elapsed / duration, 1);
+                const t = easeInQuart(rawT);
+
+                camera.position.lerpVectors(startCam, endCamPos, t);
+                controls.target.lerpVectors(startTarget, screenCenter, t);
+
+                // Fade in the overlay during the last 30% of the zoom
+                if (rawT > 0.7) {
+                    const fadeT = (rawT - 0.7) / 0.3;
+                    macTransition.style.opacity = fadeT;
+                }
+
+                if (rawT < 1) {
+                    requestAnimationFrame(animateZoom);
+                } else {
+                    // Zoom complete — overlay is opaque with spinner
+                    macTransition.classList.add('active');
+                    showProjectsIframe();
+                }
+            }
+
+            animateZoom();
+        }
+
+        // ══════════════════════════════════════
+        // CRT "CLICK HERE" TEXTURE
+        // ══════════════════════════════════════
+
+        function createCRTTexture() {
+            crtCanvas = document.createElement('canvas');
+            crtCanvas.width = 256;
+            crtCanvas.height = 256;
+            crtCtx = crtCanvas.getContext('2d');
+            crtTexture = new THREE.CanvasTexture(crtCanvas);
+            crtTexture.encoding = THREE.sRGBEncoding;
+            updateCRT();
+            return crtTexture;
+        }
+
+        function updateCRT() {
+            if (!crtCtx) return;
+            const w = crtCanvas.width, h = crtCanvas.height;
+            crtFrame++;
+
+            // Dark screen background
+            crtCtx.fillStyle = '#0a0a0a';
+            crtCtx.fillRect(0, 0, w, h);
+
+            // Subtle screen glow
+            const grd = crtCtx.createRadialGradient(w / 2, h / 2, 20, w / 2, h / 2, w / 2);
+            grd.addColorStop(0, 'rgba(0, 40, 0, 0.3)');
+            grd.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            crtCtx.fillStyle = grd;
+            crtCtx.fillRect(0, 0, w, h);
+
+            // Flicker intensity
+            const flicker = 0.7 + Math.random() * 0.3;
+            const g = Math.floor(220 * flicker);
+
+            // "CLICK HERE" text
+            crtCtx.font = 'bold 32px monospace';
+            crtCtx.textAlign = 'center';
+            crtCtx.textBaseline = 'middle';
+
+            // Glow layer
+            crtCtx.shadowColor = 'rgb(0, ' + g + ', 0)';
+            crtCtx.shadowBlur = 12;
+            crtCtx.fillStyle = 'rgb(0, ' + g + ', 0)';
+            crtCtx.fillText('CLICK', w / 2, h / 2 - 22);
+            crtCtx.fillText('HERE', w / 2, h / 2 + 22);
+            crtCtx.shadowBlur = 0;
+
+            // Scanlines
+            crtCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            for (let y = 0; y < h; y += 3) {
+                crtCtx.fillRect(0, y, w, 1);
+            }
+
+            // Occasional horizontal glitch line
+            if (Math.random() > 0.92) {
+                const gy = Math.random() * h;
+                crtCtx.fillStyle = 'rgba(0, 255, 0, 0.08)';
+                crtCtx.fillRect(0, gy, w, 2);
+            }
+
+            if (crtTexture) crtTexture.needsUpdate = true;
+        }
+
+        // ══════════════════════════════════════
+        // TV SCREEN ZOOM → ABOUT PAGE
+        // ══════════════════════════════════════
+
+        function showAboutIframe() {
+            if (!aboutFrameLoaded) {
+                aboutFrame.src = './about-page/index.html';
+                aboutFrameLoaded = true;
+            }
+
+            function revealIframe() {
+                aboutFrame.classList.add('active');
+                currentScene = 'about-page';
+                siteName.classList.add('clickable');
+                setTimeout(() => {
+                    macTransition.classList.remove('active');
+                    macTransition.style.opacity = '';
+                    isTransitioning = false;
+                    navLinks.classList.add('hidden');
+                }, 500);
+            }
+
+            if (aboutFrame.dataset.ready) {
+                revealIframe();
+            } else {
+                aboutFrame.addEventListener('load', () => {
+                    aboutFrame.dataset.ready = '1';
+                    revealIframe();
+                }, { once: true });
+            }
+        }
+
+        function hideAboutIframe() {
+            aboutFrame.classList.remove('active');
+        }
+
+        function zoomToTVScreen() {
+            if (isTransitioning || !loadedModels.about) return;
+
+            isTransitioning = true;
+            navLinks.classList.add('hidden');
+            controls.enabled = false;
+
+            // Zoom toward the center of the about model
+            const aboutPos = SCENES.about;
+            const screenCenter = new THREE.Vector3(aboutPos.x, 0.8, aboutPos.z);
+            const dirToCam = camera.position.clone().sub(screenCenter).normalize();
+            const endCamPos = screenCenter.clone().add(dirToCam.multiplyScalar(0.3));
+            endCamPos.y = screenCenter.y;
+
+            const duration = 1800;
+            const startTime = performance.now();
+            const startCam = camera.position.clone();
+            const startTarget = controls.target.clone();
+
+            if (!aboutFrameLoaded) {
+                aboutFrame.src = './about-page/index.html';
+                aboutFrameLoaded = true;
+            }
+
+            function easeInQuart(t) { return t * t * t * t; }
+
+            function animateZoom() {
+                const elapsed = performance.now() - startTime;
+                const rawT = Math.min(elapsed / duration, 1);
+                const t = easeInQuart(rawT);
+
+                camera.position.lerpVectors(startCam, endCamPos, t);
+                controls.target.lerpVectors(startTarget, screenCenter, t);
+
+                if (rawT > 0.7) {
+                    macTransition.style.opacity = (rawT - 0.7) / 0.3;
+                }
+
+                if (rawT < 1) {
+                    requestAnimationFrame(animateZoom);
+                } else {
+                    macTransition.classList.add('active');
+                    showAboutIframe();
+                }
+            }
+
+            animateZoom();
+        }
+
+        // ══════════════════════════════════════
+        // LOAD MODELS
+        // ══════════════════════════════════════
+
+        // ── HOME SCENE: Diorama ──
+        const bakedTexture = textureLoader.load(
+            'https://rawcdn.githack.com/ricardoolivaalonso/ThreeJS-Room13/47b05e2db4e49eec33d63729e920894a906cb693/static/baked.jpg'
+        );
+        bakedTexture.flipY = false;
+        bakedTexture.encoding = THREE.sRGBEncoding;
+        const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture });
+
+        // Photo textures for wall frames
+        const framePhotos = {
+            'Plane003': './images/IMG_3763 Edited.JPG',
+            'Plane004': './images/dorinyc.JPG',
+            'Plane005': './images/_A7I7239.JPEG'
+        };
+
+        const frameMaterials = {};
+        for (const [name, path] of Object.entries(framePhotos)) {
+            const noCachePath = path + '?t=' + new Date().getTime();
+            const tex = textureLoader.load(noCachePath);
+            tex.encoding = THREE.sRGBEncoding;
+            frameMaterials[name] = new THREE.MeshBasicMaterial({ map: tex });
+        }
+
+        // Numbered labels for remaining frames
+        function makeNumberTexture(num) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#f5f0eb';
+            ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = '#2d2d2d';
+            ctx.font = 'bold 120px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(num), 128, 128);
+            const tex = new THREE.CanvasTexture(c);
+            tex.flipY = false;
+            tex.encoding = THREE.sRGBEncoding;
+            return tex;
+        }
+
+        const remainingFrames = [
+            'Plane006', 'Plane007', 'Plane032',
+            'Plane046', 'Plane047', 'Plane048', 'Plane049', 'Plane050',
+            'Cube034', 'Cube038', 'Cube039', 'Cube040',
+            'Cube041', 'Cube042', 'Cube043', 'Cube044', 'Cube045'
+        ];
+        remainingFrames.forEach((name, i) => {
+            frameMaterials[name] = new THREE.MeshBasicMaterial({ map: makeNumberTexture(i + 1) });
+        });
+
+        // UV projection helper for photo frames
+        function projectUVs(child) {
+            child.geometry = child.geometry.clone();
+            const pos = child.geometry.attributes.position;
+            const uvArr = new Float32Array(pos.count * 2);
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            let minZ = Infinity, maxZ = -Infinity;
+            for (let i = 0; i < pos.count; i++) {
+                minX = Math.min(minX, pos.getX(i)); maxX = Math.max(maxX, pos.getX(i));
+                minY = Math.min(minY, pos.getY(i)); maxY = Math.max(maxY, pos.getY(i));
+                minZ = Math.min(minZ, pos.getZ(i)); maxZ = Math.max(maxZ, pos.getZ(i));
+            }
+            const rangeX = maxX - minX, rangeY = maxY - minY, rangeZ = maxZ - minZ;
+            for (let i = 0; i < pos.count; i++) {
+                let u, v;
+                if (rangeZ <= rangeX && rangeZ <= rangeY) {
+                    u = rangeX > 0 ? (pos.getX(i) - minX) / rangeX : 0;
+                    v = rangeY > 0 ? (pos.getY(i) - minY) / rangeY : 0;
+                } else if (rangeX <= rangeY && rangeX <= rangeZ) {
+                    u = rangeZ > 0 ? (pos.getZ(i) - minZ) / rangeZ : 0;
+                    v = rangeY > 0 ? (pos.getY(i) - minY) / rangeY : 0;
+                } else {
+                    u = rangeX > 0 ? (pos.getX(i) - minX) / rangeX : 0;
+                    v = rangeZ > 0 ? (pos.getZ(i) - minZ) / rangeZ : 0;
+                }
+                uvArr[i * 2] = u;
+                uvArr[i * 2 + 1] = v;
+            }
+            child.geometry.setAttribute('uv', new THREE.BufferAttribute(uvArr, 2));
+        }
+
+        // Load diorama at HOME position
+        const homePos = SCENES.home;
+        gltfLoader.load(
+            'https://rawcdn.githack.com/ricardoolivaalonso/ThreeJS-Room13/47b05e2db4e49eec33d63729e920894a906cb693/static/model.glb',
+            (gltf) => {
+                const model = gltf.scene;
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        if (frameMaterials[child.name]) {
+                            child.material = frameMaterials[child.name];
+                            projectUVs(child);
+                        } else {
+                            child.material = bakedMaterial;
+                        }
+                    }
+                });
+                model.position.set(homePos.x, 0.2, homePos.z);
+                scene.add(model);
+                loadedModels.home = model;
+
+                // Set initial camera
+                setCameraToScene('home');
+                updateNav('home');
+
+                // Fade out loader
+                loading.classList.add('hidden');
+
+                // Load Macintosh on the table
+                gltfLoader.load(
+                    './3d models/macintosh_classic_1991.glb',
+                    (macGltf) => {
+                        const macModel = macGltf.scene;
+                        const oldScale = 0.15;
+                        const newScale = 0.30;
+
+                        macModel.scale.set(oldScale, oldScale, oldScale);
+                        macModel.position.set(0.019, 0.012, 0.136);
+                        macModel.rotation.y = (Math.PI / 4 - Math.PI / 3) + (2 * Math.PI / 9) - (24 * Math.PI / 180);
+                        model.add(macModel);
+
+                        // Pin the base: measure bottom at old scale, then scale up and compensate
+                        model.updateMatrixWorld(true);
+                        const oldBox = new THREE.Box3().setFromObject(macModel);
+                        const oldBottom = oldBox.min.y;
+
+                        macModel.scale.set(newScale, newScale, newScale);
+                        model.updateMatrixWorld(true);
+                        const newBox = new THREE.Box3().setFromObject(macModel);
+                        const newBottom = newBox.min.y;
+
+                        macModel.position.y += (oldBottom - newBottom);
+
+                        macModel.traverse((child) => {
+                            if (child.isMesh && child.material) {
+                                child.material.depthWrite = true;
+                                child.material.transparent = false;
+                            }
+                        });
+
+                        macModelRef = macModel;
+                    }
+                );
+            }
+        );
+
+        // ── ABOUT SCENE: Isometric Suitcase Room (lazy-loaded) ──
+        function loadAboutScene(callback) {
+            if (loadedModels.about) { callback(); return; }
+            gltfLoader.load(
+                './3d models/isometric_suitcase_room_example_for_tutorial.glb',
+                (gltf) => {
+                    const model = gltf.scene;
+                    const aboutPos = SCENES.about;
+                    model.position.set(aboutPos.x, 0, aboutPos.z);
+                    model.scale.set(0.5, 0.5, 0.5);
+
+                    // Warm glow lighting to match the home diorama's cozy feel
+                    const warmColor = 0xffe0a0;
+                    const topGlow = new THREE.PointLight(warmColor, 0.9, 18);
+                    topGlow.position.set(aboutPos.x, 3.5, aboutPos.z);
+                    scene.add(topGlow);
+
+                    const fillGlow = new THREE.PointLight(0xffd08a, 0.5, 14);
+                    fillGlow.position.set(aboutPos.x + 1.5, 1.2, aboutPos.z + 1.5);
+                    scene.add(fillGlow);
+
+                    const backGlow = new THREE.PointLight(0xffc870, 0.35, 12);
+                    backGlow.position.set(aboutPos.x - 1.5, 1.8, aboutPos.z - 1);
+                    scene.add(backGlow);
+
+                    // Best-effort: apply CRT texture to any mesh with a TV-like name
+                    const tvKeywords = ['tv', 'screen', 'monitor', 'display'];
+                    let crtApplied = false;
+
+                    model.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            const n = (child.name || '').toLowerCase();
+                            if (!crtApplied && tvKeywords.some(k => n.includes(k))) {
+                                child.material = new THREE.MeshBasicMaterial({ map: createCRTTexture() });
+                                crtApplied = true;
+                            } else if (child.material.color) {
+                                child.material.color.lerp(new THREE.Color(0xfff0d6), 0.08);
+                            }
+                        }
+                    });
+
+                    scene.add(model);
+                    loadedModels.about = model;
+                    callback();
+                },
+                undefined,
+                (err) => { console.error('Error loading About model:', err); }
+            );
+        }
+
+
+        // ══════════════════════════════════════
+        // EVENT LISTENERS
+        // ══════════════════════════════════════
+
+        // Nav link clicks
+        navLeft.addEventListener('click', () => {
+            const target = navLeft.dataset.scene;
+            navigateTo(target);
+        });
+
+        navRight.addEventListener('click', () => {
+            const target = navRight.dataset.scene;
+            navigateTo(target);
+        });
+
+        // DORJAN DODA click → Home
+        siteName.addEventListener('click', () => {
+            if (siteName.classList.contains('clickable')) {
+                navigateTo('home');
+            }
+        });
+
+        function navigateTo(target) {
+            if (isTransitioning || target === currentScene) return;
+
+            // If we're in the projects iframe, close it first
+            if (currentScene === 'projects') {
+                hideProjectsIframe();
+                setCameraToScene('home');
+                controls.enabled = true;
+                updateNav('home');
+                navLinks.classList.remove('hidden');
+                if (target !== 'home') {
+                    setTimeout(() => {
+                        if (target === 'about') {
+                            loadAboutScene(() => transitionTo('about'));
+                        }
+                    }, 100);
+                }
+                return;
+            }
+
+            // If we're in the about-page iframe, close it first
+            if (currentScene === 'about-page') {
+                hideAboutIframe();
+                setCameraToScene('about');
+                controls.enabled = true;
+                updateNav('about');
+                navLinks.classList.remove('hidden');
+                if (target === 'home') {
+                    setTimeout(() => transitionTo('home'), 100);
+                } else if (target === 'projects') {
+                    setTimeout(() => {
+                        transitionTo('home');
+                        setTimeout(() => zoomToMacAndLoadProjects(), 1600);
+                    }, 100);
+                }
+                return;
+            }
+
+            if (target === 'about') {
+                loadAboutScene(() => transitionTo('about'));
+            } else if (target === 'projects') {
+                zoomToMacAndLoadProjects();
+            } else {
+                transitionTo('home');
+            }
+        }
+
+        // ── TV screen click + hover cursor ──
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        canvas.addEventListener('click', () => {
+            if (isTransitioning || !loadedModels.about || currentScene !== 'about') return;
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObjects(loadedModels.about.children, true);
+            if (hits.length > 0) {
+                zoomToTVScreen();
+            }
+        });
+
+        // ── Resize ──
+        window.addEventListener('resize', () => {
+            sizes.width = window.innerWidth;
+            sizes.height = window.innerHeight;
+            camera.aspect = sizes.width / sizes.height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(sizes.width, sizes.height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        });
+
+        // ── Animation Loop ──
+        const tick = () => {
+            controls.update();
+
+            // Animate CRT flicker ~8fps
+            if (crtTexture && currentScene === 'about' && crtFrame % 8 === 0) {
+                updateCRT();
+            }
+            crtFrame++;
+
+            // Change cursor when hovering over the about model
+            if (loadedModels.about && currentScene === 'about' && !isTransitioning) {
+                raycaster.setFromCamera(mouse, camera);
+                const hits = raycaster.intersectObjects(loadedModels.about.children, true);
+                document.body.style.cursor = hits.length > 0 ? 'pointer' : 'grab';
+            }
+
+            renderer.render(scene, camera);
+            window.requestAnimationFrame(tick);
+        };
+
+        tick();
+    </script>
+</body>
+
+</html>
