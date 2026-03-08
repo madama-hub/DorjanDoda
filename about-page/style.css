@@ -10,9 +10,10 @@ p {
   color: #fcd000;
   font-weight: bold;
   width: 600px;
+  max-width: 90vw;
   margin: 0 auto;
   transform: rotateX(30deg);
-  animation: animateCrawl 20s ease-in;
+  animation: animateCrawl 25s ease-in;
 }
 
 p span { 
@@ -25,4 +26,22 @@ p span {
 @keyframes animateCrawl {
     0%   { transform: rotateX(30deg) translateY(400px); }
     100% { transform: rotateX(30deg) translateY(-300px); }
+}
+
+@media (max-width: 768px) {
+  p {
+    font-size: 18px;
+    width: 90vw;
+  }
+
+  @keyframes animateCrawl {
+    0%   { transform: rotateX(30deg) translateY(300px); }
+    100% { transform: rotateX(30deg) translateY(-250px); }
+  }
+}
+
+@media (max-width: 480px) {
+  p {
+    font-size: 15px;
+  }
 }

@@ -225,6 +225,44 @@
             pointer-events: auto;
         }
 
+        /* ── Mobile Responsive ── */
+        @media (max-width: 768px) {
+            :root {
+                --font-size-title: 1.5rem;
+                --font-size-subtitle: 0.85rem;
+            }
+
+            .site-name {
+                top: 1rem;
+                left: 1rem;
+            }
+
+            .nav-links {
+                top: 1.15rem;
+                right: 1rem;
+                gap: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            :root {
+                --font-size-title: 1.2rem;
+                --font-size-subtitle: 0.75rem;
+            }
+
+            .site-name {
+                top: 0.8rem;
+                left: 0.8rem;
+                letter-spacing: 0.04em;
+            }
+
+            .nav-links {
+                top: 0.95rem;
+                right: 0.8rem;
+                gap: 0.8rem;
+            }
+        }
+
     </style>
 </head>
 
