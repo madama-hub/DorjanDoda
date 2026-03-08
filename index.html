@@ -1050,18 +1050,36 @@
             }
         }
 
-        // ── TV screen click + hover cursor ──
+        // ── TV screen click + hover cursor (mouse + touch) ──
         window.addEventListener('mousemove', (event) => {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         });
 
-        canvas.addEventListener('click', () => {
+        function handleModelClick(clientX, clientY) {
             if (isTransitioning || !loadedModels.about || currentScene !== 'about') return;
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             const hits = raycaster.intersectObjects(loadedModels.about.children, true);
             if (hits.length > 0) {
                 zoomToTVScreen();
+            }
+        }
+
+        canvas.addEventListener('click', (e) => handleModelClick(e.clientX, e.clientY));
+
+        canvas.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length > 0) {
+                const t = e.changedTouches[0];
+                handleModelClick(t.clientX, t.clientY);
+            }
+        });
+
+        // ── Listen for about-page auto-return ──
+        window.addEventListener('message', (e) => {
+            if (e.data === 'crawl-finished') {
+                navigateTo('home');
             }
         });
 

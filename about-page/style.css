@@ -13,7 +13,7 @@ p {
   max-width: 90vw;
   margin: 0 auto;
   transform: rotateX(30deg);
-  animation: animateCrawl 25s ease-in;
+  animation: animateCrawl 35s linear forwards;
 }
 
 p span { 
@@ -24,8 +24,8 @@ p span {
 }
 
 @keyframes animateCrawl {
-    0%   { transform: rotateX(30deg) translateY(400px); }
-    100% { transform: rotateX(30deg) translateY(-300px); }
+    0%   { transform: rotateX(30deg) translateY(500px); }
+    100% { transform: rotateX(30deg) translateY(-800px); }
 }
 
 @media (max-width: 768px) {
@@ -35,8 +35,8 @@ p span {
   }
 
   @keyframes animateCrawl {
-    0%   { transform: rotateX(30deg) translateY(300px); }
-    100% { transform: rotateX(30deg) translateY(-250px); }
+    0%   { transform: rotateX(30deg) translateY(400px); }
+    100% { transform: rotateX(30deg) translateY(-600px); }
   }
 }
 
