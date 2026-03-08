@@ -416,8 +416,24 @@
         const swTheme = document.querySelector('#sw-theme');
         swTheme.volume = 0.6;
         let swFading = false;
+        let swUnlocked = false;
         let projectsFrameLoaded = false;
         let aboutFrameLoaded = false;
+
+        // iOS requires audio.play() in a direct user gesture to "unlock" it
+        function unlockAudio() {
+            if (swUnlocked) return;
+            swTheme.muted = true;
+            swTheme.play().then(() => {
+                swTheme.pause();
+                swTheme.muted = false;
+                swTheme.currentTime = 0;
+                swUnlocked = true;
+            }).catch(() => {});
+        }
+        document.addEventListener('touchstart', unlockAudio, { once: false });
+        document.addEventListener('touchend', unlockAudio, { once: false });
+        document.addEventListener('click', unlockAudio, { once: false });
 
         function startSWTheme() {
             swTheme.currentTime = 0;
