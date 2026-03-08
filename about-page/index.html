@@ -62,9 +62,31 @@ Inspired by science, technology, and the endless sense of possibility found in s
     var audio = document.getElementById('theme');
     var muteBtn = document.getElementById('mute-btn');
     var crawl = document.getElementById('crawl');
+    var fading = false;
 
     audio.volume = 0.6;
     audio.play().catch(function() {});
+
+    function fadeOutAudio(callback) {
+      if (fading || audio.muted) {
+        if (callback) callback();
+        return;
+      }
+      fading = true;
+      var startVol = audio.volume;
+      var steps = 40;
+      var interval = 2000 / steps;
+      var step = 0;
+      var fade = setInterval(function() {
+        step++;
+        audio.volume = Math.max(0, startVol * (1 - step / steps));
+        if (step >= steps) {
+          clearInterval(fade);
+          audio.pause();
+          if (callback) callback();
+        }
+      }, interval);
+    }
 
     muteBtn.addEventListener('click', function() {
       audio.muted = !audio.muted;
@@ -72,11 +94,23 @@ Inspired by science, technology, and the endless sense of possibility found in s
     });
 
     crawl.addEventListener('animationend', function() {
-      setTimeout(function() {
-        if (window.parent !== window) {
-          window.parent.postMessage('crawl-finished', '*');
-        }
-      }, 3000);
+      fadeOutAudio(function() {
+        setTimeout(function() {
+          if (window.parent !== window) {
+            window.parent.postMessage('crawl-finished', '*');
+          }
+        }, 500);
+      });
+    });
+
+    window.addEventListener('message', function(e) {
+      if (e.data === 'fade-audio') {
+        fadeOutAudio(function() {
+          if (window.parent !== window) {
+            window.parent.postMessage('audio-faded', '*');
+          }
+        });
+      }
     });
   </script>
   </body>

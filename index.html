@@ -1024,21 +1024,38 @@
                 return;
             }
 
-            // If we're in the about-page iframe, close it first
+            // If we're in the about-page iframe, fade audio then close
             if (currentScene === 'about-page') {
-                hideAboutIframe();
-                setCameraToScene('about');
-                controls.enabled = true;
-                updateNav('about');
-                navLinks.classList.remove('hidden');
-                if (target === 'home') {
-                    setTimeout(() => transitionTo('home'), 100);
-                } else if (target === 'projects') {
-                    setTimeout(() => {
-                        transitionTo('home');
-                        setTimeout(() => zoomToMacAndLoadProjects(), 1600);
-                    }, 100);
-                }
+                const afterFade = () => {
+                    hideAboutIframe();
+                    setCameraToScene('about');
+                    controls.enabled = true;
+                    updateNav('about');
+                    navLinks.classList.remove('hidden');
+                    if (target === 'home') {
+                        setTimeout(() => transitionTo('home'), 100);
+                    } else if (target === 'projects') {
+                        setTimeout(() => {
+                            transitionTo('home');
+                            setTimeout(() => zoomToMacAndLoadProjects(), 1600);
+                        }, 100);
+                    }
+                };
+
+                // Tell the iframe to fade its audio, then proceed
+                const onFaded = (e) => {
+                    if (e.data === 'audio-faded') {
+                        window.removeEventListener('message', onFaded);
+                        afterFade();
+                    }
+                };
+                window.addEventListener('message', onFaded);
+                aboutFrame.contentWindow.postMessage('fade-audio', '*');
+                // Fallback in case fade message never comes back
+                setTimeout(() => {
+                    window.removeEventListener('message', onFaded);
+                    afterFade();
+                }, 2500);
                 return;
             }
 
