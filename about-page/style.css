@@ -13,6 +13,7 @@ body {
   height: 100%;
   perspective: 200px;
   overflow: hidden;
+  pointer-events: none;
 }
 
 p {
