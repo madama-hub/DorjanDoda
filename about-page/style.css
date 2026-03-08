@@ -40,19 +40,39 @@ p span {
 }
 
 @media (max-width: 768px) {
+  .crawl-wrapper {
+    perspective: 150px;
+  }
+
   p {
-    font-size: 18px;
-    width: 90vw;
+    font-size: 20px;
+    width: 85vw;
+    line-height: 1.5;
+  }
+
+  p span {
+    margin-bottom: 14px;
   }
 
   @keyframes animateCrawl {
-    0%   { transform: rotateX(30deg) translateY(400px); }
-    100% { transform: rotateX(30deg) translateY(-900px); }
+    0%   { transform: rotateX(25deg) translateY(400px); }
+    100% { transform: rotateX(25deg) translateY(-900px); }
   }
 }
 
 @media (max-width: 480px) {
+  .crawl-wrapper {
+    perspective: 120px;
+  }
+
   p {
-    font-size: 15px;
+    font-size: 18px;
+    width: 88vw;
+    line-height: 1.6;
+  }
+
+  @keyframes animateCrawl {
+    0%   { transform: rotateX(20deg) translateY(350px); }
+    100% { transform: rotateX(20deg) translateY(-800px); }
   }
 }
