@@ -699,10 +699,10 @@
         // ══════════════════════════════════════
 
         function showAboutIframe() {
-            if (!aboutFrameLoaded) {
-                aboutFrame.src = './about-page/index.html';
-                aboutFrameLoaded = true;
-            }
+            // Always reload to restart audio + crawl animation from the beginning
+            aboutFrame.dataset.ready = '';
+            aboutFrame.src = './about-page/index.html';
+            aboutFrameLoaded = true;
 
             function revealIframe() {
                 aboutFrame.classList.add('active');
@@ -716,14 +716,10 @@
                 }, 500);
             }
 
-            if (aboutFrame.dataset.ready) {
+            aboutFrame.addEventListener('load', () => {
+                aboutFrame.dataset.ready = '1';
                 revealIframe();
-            } else {
-                aboutFrame.addEventListener('load', () => {
-                    aboutFrame.dataset.ready = '1';
-                    revealIframe();
-                }, { once: true });
-            }
+            }, { once: true });
         }
 
         function hideAboutIframe() {

@@ -11,21 +11,21 @@
         position: fixed;
         bottom: 2rem;
         right: 2rem;
-        width: 48px;
-        height: 48px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
-        border: 2px solid rgba(252, 208, 0, 0.6);
-        background: rgba(0, 0, 0, 0.5);
+        border: 2px solid #fcd000;
+        background: rgba(252, 208, 0, 0.15);
         cursor: pointer;
-        z-index: 100;
+        z-index: 9999;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: border-color 0.2s ease, background 0.2s ease;
+        transition: background 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
       }
       #mute-btn:hover {
-        border-color: #fcd000;
-        background: rgba(252, 208, 0, 0.1);
+        background: rgba(252, 208, 0, 0.3);
       }
       #mute-btn svg {
         width: 22px;
